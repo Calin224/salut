@@ -10,12 +10,9 @@ import sys
 
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import classification_report, f1_score
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TRAIN_PATH = os.path.join(BASE_DIR, "level1_train.csv")
@@ -45,11 +42,6 @@ X = X[feature_cols].replace([np.inf, -np.inf], np.nan)
 test_ids = test_df["id"]
 X_test = test_df[feature_cols].replace([np.inf, -np.inf], np.nan)
 
-if set(y.unique()) != {0, 1}:
-    sys.exit("[EROARE] Coloana label din train trebuie sa contina ambele clase, 0 si 1.")
-if not feature_cols or test_ids.empty or not test_ids.is_unique or test_ids.isna().any():
-    sys.exit("[EROARE] Sunt necesare caracteristici numerice si ID-uri de test unice si nenule.")
-
 print(f"Features numerice selectate: {len(feature_cols)}")
 
 # 3. Validare locala (Train / Validation Split)
@@ -57,11 +49,7 @@ X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-model = make_pipeline(
-    SimpleImputer(strategy="constant", fill_value=0, keep_empty_features=True),
-    StandardScaler(),
-    LogisticRegression(max_iter=200, random_state=42),
-)
+model = HistGradientBoostingClassifier(random_state=42)
 model.fit(X_train, y_train)
 
 val_preds = model.predict(X_val)
